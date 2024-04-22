@@ -1,6 +1,6 @@
 {
   "name": "serverless",
   "sdk": "go",
-  "source": "dagger",
+  "source": ".",
   "engineVersion": "v0.11.1"
 }
