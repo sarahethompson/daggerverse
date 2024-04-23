@@ -2,7 +2,7 @@
 
 Functions for using the [Serverless](https://www.serverless.com/framework/docs/providers/aws/cli-reference) framework.
 
-Currently, only deploying is supported.
+Currently, only deploying to AWS is supported.
 
 ## Deploying
 
