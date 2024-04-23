@@ -11,9 +11,13 @@ type Serverless struct{}
 // Runs a serverless deploy
 func (m *Serverless) Deploy(
 	ctx context.Context,
-	configFile *File,
+	//configFile *File,
+	configDir *Directory,
 	awsAccessKeyID *Secret,
 	awsSecretAccessKey *Secret,
+	awsSessionToken *Secret,
+	// +optional
+	serverlessAccessKey *Secret,
 	// +optional
 	stage string,
 	// +optional
@@ -32,12 +36,23 @@ func (m *Serverless) Deploy(
 	if force != "" {
 		deployArgs = append(deployArgs, "--force", force)
 	}
-	return dag.Container().From("alpine:latest").
-		WithExec([]string{"apk", "add", "curl", "bash", "npm"}).
+
+	//create container
+	container := dag.Container().From("alpine:latest")
+
+	//set optional secret
+	if serverlessAccessKey != nil {
+		container = container.WithSecretVariable("SERVERLESS_ACCESS_KEY", serverlessAccessKey)
+	}
+
+	container = container.WithExec([]string{"apk", "add", "curl", "bash", "npm"}).
 		WithExec([]string{"npm", "install", "-g", "serverless"}).
-		WithFile("serverless.yml", configFile).
+		WithDirectory("/host", configDir).
+		WithWorkdir("/host").
 		WithSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyID).
 		WithSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey).
-		WithExec(deployArgs).
-		Stderr(ctx)
+		WithSecretVariable("AWS_SESSION_TOKEN", awsSessionToken).
+		WithExec(deployArgs)
+
+	return container.Stdout(ctx)
 }
